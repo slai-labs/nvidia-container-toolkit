@@ -18,9 +18,10 @@ import (
 )
 
 var (
-	debugflag   = flag.Bool("debug", false, "enable debug output")
-	versionflag = flag.Bool("version", false, "enable version output")
-	configflag  = flag.String("config", "", "configuration file")
+	debugflag     = flag.Bool("debug", false, "enable debug output")
+	versionflag   = flag.Bool("version", false, "enable version output")
+	configflag    = flag.String("config", "", "configuration file")
+	ociConfigFlag = flag.String("ociconfig", "", "oci configuration file")
 )
 
 func exit() {
@@ -65,7 +66,7 @@ func getRootfsPath(config containerConfig) string {
 	return rootfs
 }
 
-func doPrestart() {
+func doPrestart(ociConfigPath *string) {
 	var err error
 
 	defer exit()
@@ -78,7 +79,7 @@ func doPrestart() {
 		log.Panicln("invoking the NVIDIA Container Runtime Hook directly (e.g. specifying the docker --gpus flag) is not supported. Please use the NVIDIA Container Runtime (e.g. specify the --runtime=nvidia flag) instead.")
 	}
 
-	container := getContainerConfig(hook)
+	container := getContainerConfig(hook, *ociConfigPath)
 	nvidia := container.Nvidia
 	if nvidia == nil {
 		// Not a GPU container, nothing to do.
@@ -173,7 +174,7 @@ func main() {
 
 	switch args[0] {
 	case "prestart":
-		doPrestart()
+		doPrestart(ociConfigFlag)
 		os.Exit(0)
 	case "poststart":
 		fallthrough
